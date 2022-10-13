@@ -10,8 +10,6 @@ import os
 
 cookie = os.getenv("ROBLOSECURITY")
 
-guineapigs = "3215315726, bisexual; 947490903, gay; 3221775372, lesbian"
-
 groupID = 7501334 #Group ID for LGBTQ+ Family
 url = 'https://groups.roblox.com/v2/groups/' + str(groupID) + '/join-requests?sortOrder=Asc&limit=10' #The API endpoint I'm using, formated to the above variable
 authurl = 'https://auth.roblox.com/v2/login' #AUthenitaction endpoint
@@ -201,6 +199,7 @@ def changeShoutFun(shoutText):
     }, data={
         "message": shoutText
     })
+    return changeShout
 
 def whatRank(ranktype):
     if ranktype == "supporter":
@@ -253,14 +252,17 @@ def whatRank(ranktype):
         return "Fail"
 
 def userRanking(requestID, rankType): 
+    print(rankType)
     rankuser = requests.patch(rankURL + requestID, headers={
         "User-Agent": userAgent,
-        "x-csrf-token": xsrf
+        "x-csrf-token": xsrf,
+        "Content-Type": "application/json"
     }, cookies={
         ".ROBLOSECURITY": cookie
-    }, data={
+    }, json={
         'roleId': rankType
     })
+    return rankuser
 
 bot = lightbulb.BotApp(
     token=os.getenv("DISCORD_TOKEN"),
@@ -316,11 +318,15 @@ async def banlist(ctx):
 @bot.listen(hikari.GuildMessageCreateEvent)
 async def detectUserRankRequest(event):
     request = event.content
-    requestLength = len(request)
-    gender = request.split("|")[1]
-    requestID = request.split("|")[2]
-    if whatRank(gender) != "Fail":
-        print(userRanking(requestID, whatRank(gender)))
+    request2= event.content
+    if "|" in request:
+      genderRequest = request.split("|")[0]
+      requestID = request2.split("|")[1]
+      gender = whatRank(genderRequest)
+      if gender != "Fail":
+          print(userRanking(requestID, gender))
+      else:
+        print("Fail!")
 
 keep_alive.keep_alive()
 bot.run()
